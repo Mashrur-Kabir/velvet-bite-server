@@ -1,5 +1,5 @@
 import { Router } from "express";
-import auth from "../../middleware/auth";
+import auth from "../../middlewares/auth";
 import { USER_ROLE } from "../../types/user";
 import { orderController } from "./order.controller";
 
