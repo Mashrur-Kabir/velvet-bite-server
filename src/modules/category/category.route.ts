@@ -1,0 +1,20 @@
+import { Router } from "express";
+import auth from "../../middlewares/auth";
+import { categoryController } from "./category.controller";
+import { USER_ROLE } from "../../types/user";
+
+const router = Router();
+
+// public
+router.get("/", categoryController.getAllCategories);
+
+// admin-only (for now)
+router.post("/", auth(USER_ROLE.ADMIN), categoryController.createCategory);
+
+router.patch(
+  "/:categoryId",
+  auth(USER_ROLE.ADMIN),
+  categoryController.updateCategory,
+);
+
+export const categoryRoutes = router;
