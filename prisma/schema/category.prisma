@@ -1,0 +1,14 @@
+/// =======================
+/// CATEGORY
+/// =======================
+
+model Category {
+    id       String  @id @default(uuid())
+    name     String  @unique
+    isActive Boolean @default(true)
+
+    meals Meal[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}

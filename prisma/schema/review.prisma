@@ -1,0 +1,18 @@
+/// =======================
+/// REVIEW
+/// =======================
+
+model Review {
+    id     String @id @default(uuid())
+    mealId String
+    userId String
+
+    rating  Int
+    comment String?
+
+    meal Meal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+
+    @@unique([mealId, userId])
+}
