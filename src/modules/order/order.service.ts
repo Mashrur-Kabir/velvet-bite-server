@@ -143,16 +143,102 @@ const getProviderOrdersFromDB = async (userId: string) => {
   });
 };
 
-const updateOrderStatusInDB = async (orderId: string, status: OrderStatus) => {
+const getAllOrdersFromDB = async () => {
+  return prisma.order.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      customer: { select: { name: true, email: true } },
+      provider: { select: { name: true } },
+    },
+  });
+};
+
+const getOrderByIdFromDB = async (
+  orderId: string,
+  userId: string,
+  role: string,
+) => {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      items: {
+        include: { meal: true },
+      },
+      customer: { select: { name: true, email: true } },
+      provider: { select: { name: true } },
+    },
+  });
+
+  if (!order) throw new AppError(404, "Order not found");
+
+  // SECURITY: Check if user has permission to see this specific order
+  const isOwner = order.customerId === userId;
+  const isProvider =
+    order.providerId ===
+    (await prisma.providerProfile.findUnique({ where: { userId } }))?.id;
+  const isAdmin = role === "ADMIN";
+
+  if (!isOwner && !isProvider && !isAdmin) {
+    throw new AppError(403, "You do not have permission to view this order");
+  }
+
+  return order;
+};
+
+const updateOrderStatusInDB = async (
+  orderId: string,
+  newStatus: OrderStatus,
+  userId: string,
+  role: string,
+) => {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
   });
 
   if (!order) throw new AppError(404, "Order not found");
 
+  // 1. CUSTOMER Logic: Can only CANCEL and only if status is PLACED
+  if (role === "CUSTOMER") {
+    if (newStatus !== "CANCELLED") {
+      throw new AppError(403, "Customers can only change status to CANCELLED");
+    }
+    if (order.status !== "PLACED") {
+      throw new AppError(
+        400,
+        "Cannot cancel order once preparation has started",
+      );
+    }
+    if (order.customerId !== userId) {
+      throw new AppError(403, "You can only cancel your own orders");
+    }
+  }
+
+  // 2. PROVIDER Logic: Must own the restaurant and cannot CANCEL
+  if (role === "PROVIDER") {
+    const providerProfile = await prisma.providerProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!providerProfile || order.providerId !== providerProfile.id) {
+      throw new AppError(
+        403,
+        "You can only update orders for your own restaurant",
+      );
+    }
+
+    if (newStatus === "CANCELLED") {
+      throw new AppError(
+        403,
+        "Providers cannot cancel orders via this endpoint",
+      );
+    }
+  }
+
+  // 3. ADMIN Logic: Full permissions (as per Admin Features) as they oversee the platform
+
   return prisma.order.update({
     where: { id: orderId },
-    data: { status },
+    data: { status: newStatus },
   });
 };
 
@@ -160,5 +246,7 @@ export const orderService = {
   createOrderInDB,
   getMyOrdersFromDB,
   getProviderOrdersFromDB,
+  getAllOrdersFromDB,
+  getOrderByIdFromDB,
   updateOrderStatusInDB,
 };

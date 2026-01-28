@@ -57,21 +57,56 @@ const getProviderOrders = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const updateOrderStatus = catchAsync(async (req: Request, res: Response) => {
+const getAllOrders = catchAsync(async (req: Request, res: Response) => {
+  const result = await orderService.getAllOrdersFromDB();
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "All platform orders fetched successfully",
+    data: result,
+  });
+});
+
+const getOrderById = catchAsync(async (req: Request, res: Response) => {
   const { orderId } = req.params;
-  const { status } = req.body;
+  const user = req.user;
 
-  if (!orderId) throw new AppError(400, "Order ID is required");
+  if (!user) throw new AppError(401, "You are unauthorized");
 
-  const result = await orderService.updateOrderStatusInDB(
+  const result = await orderService.getOrderByIdFromDB(
     orderId as string,
-    status as OrderStatus,
+    user.id,
+    user.role,
   );
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Order status updated",
+    message: "Order details fetched successfully",
+    data: result,
+  });
+});
+
+const updateOrderStatus = catchAsync(async (req: Request, res: Response) => {
+  const { orderId } = req.params;
+  const { status } = req.body;
+  const user = req.user;
+
+  if (!user) throw new AppError(401, "You are unauthorized");
+  if (!orderId) throw new AppError(400, "Order ID is required");
+
+  const result = await orderService.updateOrderStatusInDB(
+    orderId as string,
+    status as OrderStatus,
+    user.id,
+    user.role,
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: `Order status updated to ${status}`,
     data: result,
   });
 });
@@ -80,5 +115,7 @@ export const orderController = {
   createOrder,
   getMyOrders,
   getProviderOrders,
+  getAllOrders,
+  getOrderById,
   updateOrderStatus,
 };

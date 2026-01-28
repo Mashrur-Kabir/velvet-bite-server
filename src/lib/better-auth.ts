@@ -27,19 +27,19 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (user) => {
-          // If the incoming role is ADMIN, force it back to CUSTOMER
-          if (user.role === "ADMIN") {
-            return {
-              data: {
-                ...user,
-                role: "CUSTOMER",
-              },
-            };
+          // 1. Force ADMIN to CUSTOMER
+          // 2. ALSO: Ensure a null/undefined role becomes CUSTOMER
+          let finalRole = user.role;
+
+          if (!finalRole || finalRole === "ADMIN") {
+            finalRole = "CUSTOMER";
           }
 
-          // Allow PROVIDER or default CUSTOMER to pass through
           return {
-            data: user,
+            data: {
+              ...user,
+              role: finalRole,
+            },
           };
         },
       },
