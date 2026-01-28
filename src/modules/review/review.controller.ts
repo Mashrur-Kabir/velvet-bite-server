@@ -34,6 +34,18 @@ const getReviewsByMeal = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// New Controller for Admin
+const getAllReviews = catchAsync(async (req: Request, res: Response) => {
+  const result = await reviewService.getAllReviewsFromDB();
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "All platform reviews fetched for moderation",
+    data: result,
+  });
+});
+
 const deleteReview = catchAsync(async (req: Request, res: Response) => {
   const { reviewId } = req.params;
   const user = req.user;
@@ -58,5 +70,6 @@ const deleteReview = catchAsync(async (req: Request, res: Response) => {
 export const reviewController = {
   createReview,
   getReviewsByMeal,
+  getAllReviews,
   deleteReview,
 };

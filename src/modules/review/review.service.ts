@@ -17,14 +17,14 @@ const createReviewInDB = async (
     throw new AppError(400, "Rating must be between 1 and 5");
   }
 
-  // 1️ Check meal exists
+  // 1. Check meal exists
   const meal = await prisma.meal.findUnique({
     where: { id: mealId },
   });
 
   if (!meal) throw new AppError(404, "Meal not found");
 
-  // 2️ Check user ordered this meal
+  // 2. Check user ordered this meal and it was DELIVERED
   const hasOrdered = await prisma.orderItem.findFirst({
     where: {
       mealId,
@@ -36,17 +36,19 @@ const createReviewInDB = async (
   });
 
   if (!hasOrdered) {
-    throw new AppError(403, "You can only review meals you have ordered");
+    throw new AppError(
+      403,
+      "You can only review meals you have ordered and received",
+    );
   }
 
-  // 3️ Create review
+  // 3. Create review with a unique check
   try {
     return await prisma.review.create({
       data: {
         mealId,
         userId,
         rating,
-        // Only include comment if it's not undefined to satisfy exactOptionalPropertyTypes
         ...(comment !== undefined && { comment }),
       },
     });
@@ -62,6 +64,25 @@ const getReviewsByMealFromDB = async (mealId: string) => {
   return prisma.review.findMany({
     where: { mealId },
     orderBy: { createdAt: "desc" },
+    include: {
+      user: {
+        select: {
+          name: true,
+          image: true,
+        },
+      },
+    },
+  });
+};
+
+// New Service for Admin Moderation
+const getAllReviewsFromDB = async () => {
+  return prisma.review.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: { select: { name: true, email: true } },
+      meal: { select: { name: true } },
+    },
   });
 };
 
@@ -76,6 +97,7 @@ const deleteReviewInDB = async (
 
   if (!review) throw new AppError(404, "Review not found");
 
+  // Admin can delete any; Customer can only delete their own
   if (!isAdmin && review.userId !== userId) {
     throw new AppError(403, "You are not authorized to delete this review");
   }
@@ -88,5 +110,6 @@ const deleteReviewInDB = async (
 export const reviewService = {
   createReviewInDB,
   getReviewsByMealFromDB,
+  getAllReviewsFromDB,
   deleteReviewInDB,
 };
