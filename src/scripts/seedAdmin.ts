@@ -1,49 +1,57 @@
-import { AppError } from "../errors/AppError";
 import { prisma } from "../lib/prisma";
-import dotenv from "dotenv";
 import { USER_ROLE } from "../types/user";
+import { logger } from "../utils/logger";
+import dotenv from "dotenv";
 
 dotenv.config();
 
 async function seedAdmin() {
   try {
-    console.log("🚀 Admin seeding started...");
+    logger.info("Starting admin seeding process...");
 
     const adminData = {
-      name: process.env.ADMIN_NAME as string,
-      email: process.env.ADMIN_EMAIL as string,
-      password: process.env.ADMIN_PASSWORD as string,
+      name: process.env.ADMIN_NAME!,
+      email: process.env.ADMIN_EMAIL!,
+      password: process.env.ADMIN_PASSWORD!,
     };
 
-    // 1. Check if user already exists to avoid duplicates
     const existingUser = await prisma.user.findUnique({
       where: { email: adminData.email },
     });
 
     if (existingUser) {
-      throw new AppError(409, "Admin already exists in the database.");
+      logger.success("Admin already exists. Skipping creation.");
+      return;
     }
 
-    // 2. Call the API to create the user via Better Auth
-    // This ensures Better Auth handles the hashing and Account table creation
-    const signUpResponse = await fetch(
-      "http://localhost:5000/api/auth/sign-up/email",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Origin: process.env.SERVER_URL || "http://localhost:5000",
-        },
-        body: JSON.stringify(adminData),
+    // Ensure /api/auth is included in the path
+    const authUrl = `${process.env.BETTER_AUTH_URL}/api/auth/sign-up/email`;
+
+    // Better-Auth expects the Origin to be a trusted one (usually your frontend)
+    const origin = process.env.APP_URL || "http://localhost:3000";
+
+    const signUpResponse = await fetch(authUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Origin: origin,
       },
-    );
+      body: JSON.stringify(adminData),
+    });
+
+    // Defensive Check: Don't parse JSON if the server sent HTML (404/500)
+    const contentType = signUpResponse.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const errorText = await signUpResponse.text();
+      logger.error(
+        `Server returned HTML instead of JSON (Status: ${signUpResponse.status}). Check if your URL path is correct.`,
+      );
+      return;
+    }
 
     const result = await signUpResponse.json();
-    console.log("📦 Auth API Response:", result);
 
-    // 3. Elevate user to ADMIN and verify email
     if (signUpResponse.ok) {
-      console.log("🪄 Elevating user to ADMIN status...");
       await prisma.user.update({
         where: { email: adminData.email },
         data: {
@@ -52,12 +60,12 @@ async function seedAdmin() {
           status: "ACTIVE",
         },
       });
-      console.log("🟢 Admin seeded and verified successfully!");
+      logger.success("Admin seeded and verified successfully.");
     } else {
-      console.error("🔴 Sign-up failed:", result.message);
+      logger.error(`Sign-up failed: ${result.message || "Unknown error"}`);
     }
   } catch (err) {
-    console.error("🔴 Seeding Error:", err);
+    logger.error("A critical error occurred during seeding", err);
   } finally {
     await prisma.$disconnect();
   }
