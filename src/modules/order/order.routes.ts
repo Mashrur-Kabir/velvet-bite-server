@@ -9,9 +9,15 @@ router.post("/", auth(USER_ROLE.CUSTOMER), orderController.createOrder);
 
 router.get("/my-orders", auth(USER_ROLE.CUSTOMER), orderController.getMyOrders);
 
+router.get(
+  "/provider-orders",
+  auth(USER_ROLE.PROVIDER),
+  orderController.getProviderOrders,
+);
+
 router.patch(
   "/:orderId/status",
-  auth(USER_ROLE.ADMIN),
+  auth(USER_ROLE.ADMIN, USER_ROLE.PROVIDER),
   orderController.updateOrderStatus,
 );
 

@@ -86,9 +86,57 @@ const getMyOrdersFromDB = async (customerId: string) => {
     where: { customerId },
     orderBy: { createdAt: "desc" },
     include: {
+      // Instead of including EVERYTHING, select specific fields
       items: {
-        include: {
-          meal: true,
+        select: {
+          id: true,
+          quantity: true,
+          price: true,
+          meal: {
+            select: {
+              name: true,
+              imageUrl: true, // Frontend only needs the name and image
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
+const getProviderOrdersFromDB = async (userId: string) => {
+  const providerProfile = await prisma.providerProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!providerProfile) {
+    throw new AppError(404, "Provider profile not found");
+  }
+
+  return prisma.order.findMany({
+    where: { providerId: providerProfile.id },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      status: true,
+      totalAmount: true,
+      deliveryAddress: true,
+      createdAt: true,
+      customer: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+      items: {
+        select: {
+          quantity: true,
+          price: true,
+          meal: {
+            select: {
+              name: true,
+            },
+          },
         },
       },
     },
@@ -111,5 +159,6 @@ const updateOrderStatusInDB = async (orderId: string, status: OrderStatus) => {
 export const orderService = {
   createOrderInDB,
   getMyOrdersFromDB,
+  getProviderOrdersFromDB,
   updateOrderStatusInDB,
 };

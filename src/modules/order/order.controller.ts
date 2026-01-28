@@ -43,6 +43,20 @@ const getMyOrders = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getProviderOrders = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user;
+  if (!user) throw new AppError(401, "You are unauthorized");
+
+  const result = await orderService.getProviderOrdersFromDB(user.id);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Incoming orders fetched successfully",
+    data: result,
+  });
+});
+
 const updateOrderStatus = catchAsync(async (req: Request, res: Response) => {
   const { orderId } = req.params;
   const { status } = req.body;
@@ -65,5 +79,6 @@ const updateOrderStatus = catchAsync(async (req: Request, res: Response) => {
 export const orderController = {
   createOrder,
   getMyOrders,
+  getProviderOrders,
   updateOrderStatus,
 };
