@@ -18,3 +18,5 @@ router.patch(
 );
 
 export const categoryRoutes = router;
+
+//all testing done
