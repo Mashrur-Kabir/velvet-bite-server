@@ -94,6 +94,7 @@ const getMyOrdersFromDB = async (customerId: string) => {
           price: true,
           meal: {
             select: {
+              id: true,
               name: true,
               imageUrl: true, // Frontend only needs the name and image
             },

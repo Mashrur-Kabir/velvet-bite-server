@@ -64,6 +64,14 @@ const getAllMealsFromDB = async (payload: IMealFilter) => {
       include: {
         category: { select: { name: true } },
         provider: { select: { name: true } },
+        // Returns the number of reviews for each meal
+        _count: {
+          select: { reviews: true },
+        },
+        // Optionally include reviews to calculate averages on the frontend
+        reviews: {
+          select: { rating: true },
+        },
       },
       skip,
       take: limit,
@@ -72,7 +80,22 @@ const getAllMealsFromDB = async (payload: IMealFilter) => {
     prisma.meal.count({ where: whereConditions }),
   ]);
 
-  return { data, total };
+  // Transforming the data to include a simple rating summary
+  const mealsWithRatings = data.map((meal) => {
+    const totalReviews = meal.reviews.length;
+    const avgRating = totalReviews
+      ? meal.reviews.reduce((acc, rev) => acc + rev.rating, 0) / totalReviews
+      : 0;
+
+    return {
+      ...meal,
+      avgRating: Number(avgRating.toFixed(1)),
+      totalReviews,
+      reviews: undefined, // Hide the raw review array to keep the list response clean
+    };
+  });
+
+  return { data: mealsWithRatings, total };
 };
 
 const getMealByIdFromDB = async (mealId: string) => {
@@ -81,7 +104,19 @@ const getMealByIdFromDB = async (mealId: string) => {
     include: {
       category: true,
       provider: true,
-      reviews: true,
+      reviews: {
+        orderBy: {
+          createdAt: "desc", // Latest reviews first
+        },
+        include: {
+          user: {
+            select: {
+              name: true,
+              image: true, // Show customer profile picture
+            },
+          },
+        },
+      },
     },
   });
 

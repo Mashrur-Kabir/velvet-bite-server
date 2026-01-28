@@ -7,6 +7,9 @@ const router = Router();
 
 router.post("/", auth(USER_ROLE.CUSTOMER), reviewController.createReview);
 
+// Add this for Admin overview
+router.get("/", auth(USER_ROLE.ADMIN), reviewController.getAllReviews);
+
 router.get("/meal/:mealId", reviewController.getReviewsByMeal);
 
 router.delete(
