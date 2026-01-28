@@ -45,7 +45,7 @@ const createOrderInDB = async (
     0,
   );
 
-  // 3. Get the providerId (Required by your Order model)
+  // 3. Get the providerId
   const providerIds = new Set(products.map((p) => p.providerId));
 
   if (providerIds.size !== 1) {
@@ -86,7 +86,7 @@ const getMyOrdersFromDB = async (customerId: string) => {
     where: { customerId },
     orderBy: { createdAt: "desc" },
     include: {
-      // Instead of including EVERYTHING, select specific fields
+      // select specific fields only
       items: {
         select: {
           id: true,
@@ -96,7 +96,7 @@ const getMyOrdersFromDB = async (customerId: string) => {
             select: {
               id: true,
               name: true,
-              imageUrl: true, // Frontend only needs the name and image
+              imageUrl: true,
             },
           },
         },
@@ -172,7 +172,7 @@ const getOrderByIdFromDB = async (
 
   if (!order) throw new AppError(404, "Order not found");
 
-  // SECURITY: Check if user has permission to see this specific order
+  // Check if user has permission to see this specific order
   const isOwner = order.customerId === userId;
   const isProvider =
     order.providerId ===

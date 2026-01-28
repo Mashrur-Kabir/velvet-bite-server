@@ -32,5 +32,3 @@ router.patch(
 );
 
 export const orderRoutes = router;
-
-//all testing done

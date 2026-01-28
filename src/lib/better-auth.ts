@@ -28,7 +28,7 @@ export const auth = betterAuth({
       create: {
         before: async (user) => {
           // 1. Force ADMIN to CUSTOMER
-          // 2. ALSO: Ensure a null/undefined role becomes CUSTOMER
+          // 2. a null/undefined role becomes CUSTOMER
           let finalRole = user.role;
 
           if (!finalRole || finalRole === "ADMIN") {

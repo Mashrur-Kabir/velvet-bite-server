@@ -8,7 +8,7 @@ const router = Router();
 // public
 router.get("/", categoryController.getAllCategories);
 
-// admin-only (for now)
+// admin-only
 router.post("/", auth(USER_ROLE.ADMIN), categoryController.createCategory);
 
 router.patch(
@@ -18,5 +18,3 @@ router.patch(
 );
 
 export const categoryRoutes = router;
-
-//all testing done

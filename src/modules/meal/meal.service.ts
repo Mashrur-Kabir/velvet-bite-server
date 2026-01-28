@@ -64,11 +64,10 @@ const getAllMealsFromDB = async (payload: IMealFilter) => {
       include: {
         category: { select: { name: true } },
         provider: { select: { name: true } },
-        // Returns the number of reviews for each meal
+        // returns the number of reviews for each meal
         _count: {
           select: { reviews: true },
         },
-        // Optionally include reviews to calculate averages on the frontend
         reviews: {
           where: { isHidden: false },
           select: { rating: true },
@@ -81,7 +80,7 @@ const getAllMealsFromDB = async (payload: IMealFilter) => {
     prisma.meal.count({ where: whereConditions }),
   ]);
 
-  // Transforming the data to include a simple rating summary
+  // Transforming data to include a simple rating summary
   const mealsWithRatings = data.map((meal) => {
     const totalReviews = meal.reviews.length;
     const avgRating = totalReviews
@@ -92,7 +91,7 @@ const getAllMealsFromDB = async (payload: IMealFilter) => {
       ...meal,
       avgRating: Number(avgRating.toFixed(1)),
       totalReviews,
-      reviews: undefined, // Hide the raw review array to keep the list response clean
+      reviews: undefined, // hide the raw review array to keep the list response clean
     };
   });
 
