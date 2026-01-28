@@ -5,7 +5,7 @@ import { OrderStatus } from "../../../generated/prisma/client";
 const createOrderInDB = async (
   customerId: string,
   items: {
-    productId: string;
+    mealId: string;
     quantity: number;
   }[],
   deliveryAddress: string,
@@ -17,7 +17,7 @@ const createOrderInDB = async (
   // 1. Fetch meals to get prices and provider info
   const products = await prisma.meal.findMany({
     where: {
-      id: { in: items.map((i) => i.productId) },
+      id: { in: items.map((i) => i.mealId) },
     },
   });
 
@@ -27,7 +27,7 @@ const createOrderInDB = async (
 
   // 2. Map items to schema structure
   const orderItems = items.map((item) => {
-    const product = products.find((p) => p.id === item.productId)!;
+    const product = products.find((p) => p.id === item.mealId)!;
 
     return {
       quantity: item.quantity,
