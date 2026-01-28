@@ -4,7 +4,7 @@
 
 model ProviderProfile {
     id          String  @id @default(uuid())
-    userId      String  @unique
+    userId      String  @unique //enforces a One-to-One relationship between a User and their ProviderProfile.
     name        String
     description String?
     address     String
