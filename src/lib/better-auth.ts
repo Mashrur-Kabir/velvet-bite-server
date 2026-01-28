@@ -23,6 +23,29 @@ export const auth = betterAuth({
 
   trustedOrigins: [process.env.APP_URL!],
 
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          // If the incoming role is ADMIN, force it back to CUSTOMER
+          if (user.role === "ADMIN") {
+            return {
+              data: {
+                ...user,
+                role: "CUSTOMER",
+              },
+            };
+          }
+
+          // Allow PROVIDER or default CUSTOMER to pass through
+          return {
+            data: user,
+          };
+        },
+      },
+    },
+  },
+
   user: {
     additionalFields: {
       role: {
