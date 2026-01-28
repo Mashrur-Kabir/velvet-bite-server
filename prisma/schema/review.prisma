@@ -7,8 +7,9 @@ model Review {
     mealId String
     userId String
 
-    rating  Int
-    comment String?
+    rating   Int
+    comment  String?
+    isHidden Boolean @default(false)
 
     user User @relation(fields: [userId], references: [id])
     meal Meal @relation(fields: [mealId], references: [id], onDelete: Cascade)

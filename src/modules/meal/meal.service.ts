@@ -70,6 +70,7 @@ const getAllMealsFromDB = async (payload: IMealFilter) => {
         },
         // Optionally include reviews to calculate averages on the frontend
         reviews: {
+          where: { isHidden: false },
           select: { rating: true },
         },
       },
@@ -105,6 +106,7 @@ const getMealByIdFromDB = async (mealId: string) => {
       category: true,
       provider: true,
       reviews: {
+        where: { isHidden: false },
         orderBy: {
           createdAt: "desc", // Latest reviews first
         },

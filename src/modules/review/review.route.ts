@@ -12,6 +12,13 @@ router.get("/", auth(USER_ROLE.ADMIN), reviewController.getAllReviews);
 
 router.get("/meal/:mealId", reviewController.getReviewsByMeal);
 
+// Admin moderation: Toggle visibility
+router.patch(
+  "/:reviewId/visibility",
+  auth(USER_ROLE.ADMIN),
+  reviewController.toggleReviewVisibility,
+);
+
 router.delete(
   "/:reviewId",
   auth(USER_ROLE.CUSTOMER, USER_ROLE.ADMIN),

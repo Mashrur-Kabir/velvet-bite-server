@@ -46,6 +46,25 @@ const getAllReviews = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const toggleReviewVisibility = catchAsync(
+  async (req: Request, res: Response) => {
+    const { reviewId } = req.params;
+    const { isHidden } = req.body; // Expecting boolean
+
+    const result = await reviewService.toggleReviewVisibilityInDB(
+      reviewId as string,
+      isHidden,
+    );
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: `Review is now ${isHidden ? "hidden" : "visible"}`,
+      data: result,
+    });
+  },
+);
+
 const deleteReview = catchAsync(async (req: Request, res: Response) => {
   const { reviewId } = req.params;
   const user = req.user;
@@ -71,5 +90,6 @@ export const reviewController = {
   createReview,
   getReviewsByMeal,
   getAllReviews,
+  toggleReviewVisibility,
   deleteReview,
 };

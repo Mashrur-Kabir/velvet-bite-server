@@ -86,6 +86,19 @@ const getAllReviewsFromDB = async () => {
   });
 };
 
+const toggleReviewVisibilityInDB = async (
+  reviewId: string,
+  isHidden: boolean,
+) => {
+  const review = await prisma.review.findUnique({ where: { id: reviewId } });
+  if (!review) throw new AppError(404, "Review not found");
+
+  return prisma.review.update({
+    where: { id: reviewId },
+    data: { isHidden },
+  });
+};
+
 const deleteReviewInDB = async (
   reviewId: string,
   userId: string,
@@ -111,5 +124,6 @@ export const reviewService = {
   createReviewInDB,
   getReviewsByMealFromDB,
   getAllReviewsFromDB,
+  toggleReviewVisibilityInDB,
   deleteReviewInDB,
 };
