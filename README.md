@@ -23,6 +23,10 @@ It supports customers, providers, and administrators with clear domain separatio
 
 ---
 
+Each module follows a **controller → service → route** pattern.
+
+---
+
 ## Core Concepts
 
 ### Roles
@@ -38,10 +42,6 @@ The system supports three roles:
 - Users default to `CUSTOMER`
 - Role escalation to `PROVIDER` happens during provider onboarding
 - `ADMIN` cannot be self-assigned and is seeded manually
-
----
-
-Each module follows a **controller → service → route** pattern.
 
 ---
 
