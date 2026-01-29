@@ -27,8 +27,8 @@ async function seedAdmin() {
     // Ensure /api/auth is included in the path
     const authUrl = `${process.env.BETTER_AUTH_URL}/api/auth/sign-up/email`;
 
-    // Better-Auth expects the Origin to be a trusted one (usually your frontend)
-    const origin = process.env.APP_URL || "http://localhost:3000";
+    // Origin
+    const origin = process.env.SERVER_URL || "http://localhost:5000";
 
     const signUpResponse = await fetch(authUrl, {
       method: "POST",
@@ -39,7 +39,7 @@ async function seedAdmin() {
       body: JSON.stringify(adminData),
     });
 
-    // Defensive Check: Don't parse JSON if the server sent HTML (404/500)
+    // don't parse JSON if the server sent HTML (404/500)
     const contentType = signUpResponse.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       const errorText = await signUpResponse.text();
