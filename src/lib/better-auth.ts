@@ -51,7 +51,8 @@ export const auth = betterAuth({
       role: {
         type: "string",
         required: false,
-        default: "CUSTOMER",
+        defaultValue: "CUSTOMER",
+        input: true,
       },
       phone: {
         type: "string",
@@ -60,7 +61,7 @@ export const auth = betterAuth({
       status: {
         type: "string",
         required: false,
-        default: "ACTIVE",
+        defaultValue: "ACTIVE",
       },
     },
   },
@@ -68,7 +69,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: false,
-    requiredEmailVerification: true,
+    requiredEmailVerification: false,
   },
 
   emailVerification: {

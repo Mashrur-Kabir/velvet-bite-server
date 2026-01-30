@@ -7,6 +7,8 @@ import { mealRoutes } from "./modules/meal/meal.route";
 import { categoryRoutes } from "./modules/category/category.route";
 import { providerRoutes } from "./modules/provider/provider.routes";
 import { orderRoutes } from "./modules/order/order.routes";
+import notFoundHandler from "./middlewares/routeNotFound";
+import globalErrorHandler from "./middlewares/globalErrorHandler";
 
 const app: Application = express();
 
@@ -44,5 +46,11 @@ app.use("/api/providers", providerRoutes);
 
 //orders:
 app.use("/api/orders", orderRoutes);
+
+// Handle 404s for undefined routes
+app.use(notFoundHandler);
+
+// Handle global errors
+app.use(globalErrorHandler);
 
 export default app;
