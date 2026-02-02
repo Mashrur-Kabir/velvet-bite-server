@@ -39,6 +39,7 @@ export const auth = betterAuth({
             data: {
               ...user,
               role: finalRole,
+              emailVerified: true,
             },
           };
         },
