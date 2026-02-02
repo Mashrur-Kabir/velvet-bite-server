@@ -9,6 +9,7 @@ import { providerRoutes } from "./modules/provider/provider.routes";
 import { orderRoutes } from "./modules/order/order.routes";
 import notFoundHandler from "./middlewares/routeNotFound";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
+import { userRoutes } from "./modules/user/user.routes";
 
 const app: Application = express();
 
@@ -46,6 +47,9 @@ app.use("/api/providers", providerRoutes);
 
 //orders:
 app.use("/api/orders", orderRoutes);
+
+//users:
+app.use("/api/users", userRoutes);
 
 // Handle 404s for undefined routes
 app.use(notFoundHandler);
