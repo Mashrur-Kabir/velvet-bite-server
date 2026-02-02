@@ -18,6 +18,20 @@ const createReview = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getMyReviews = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user;
+  if (!user) throw new AppError(401, "You are unauthorized");
+
+  const result = await reviewService.getMyReviewsFromDB(user.id);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Your personal reflections fetched successfully",
+    data: result,
+  });
+});
+
 const getReviewsByMeal = catchAsync(async (req: Request, res: Response) => {
   const { mealId } = req.params;
   if (!mealId) throw new AppError(400, "Meal ID is required");
@@ -88,6 +102,7 @@ const deleteReview = catchAsync(async (req: Request, res: Response) => {
 
 export const reviewController = {
   createReview,
+  getMyReviews,
   getReviewsByMeal,
   getAllReviews,
   toggleReviewVisibility,

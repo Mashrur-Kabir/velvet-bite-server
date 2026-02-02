@@ -7,6 +7,12 @@ const router = Router();
 
 router.post("/", auth(USER_ROLE.CUSTOMER), reviewController.createReview);
 
+router.get(
+  "/my-reviews",
+  auth(USER_ROLE.CUSTOMER),
+  reviewController.getMyReviews,
+);
+
 // Add this for Admin overview
 router.get("/", auth(USER_ROLE.ADMIN), reviewController.getAllReviews);
 

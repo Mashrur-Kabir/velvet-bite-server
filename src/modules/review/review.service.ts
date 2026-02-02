@@ -60,6 +60,21 @@ const createReviewInDB = async (
   }
 };
 
+const getMyReviewsFromDB = async (userId: string) => {
+  return prisma.review.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      meal: {
+        select: {
+          name: true,
+          imageUrl: true,
+        },
+      },
+    },
+  });
+};
+
 const getReviewsByMealFromDB = async (mealId: string) => {
   return prisma.review.findMany({
     where: { mealId },
@@ -122,6 +137,7 @@ const deleteReviewInDB = async (
 
 export const reviewService = {
   createReviewInDB,
+  getMyReviewsFromDB,
   getReviewsByMealFromDB,
   getAllReviewsFromDB,
   toggleReviewVisibilityInDB,
