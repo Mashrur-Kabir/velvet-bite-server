@@ -3,17 +3,41 @@ import { AppError } from "../../errors/AppError";
 import { UserStatus } from "../../../generated/prisma/enums";
 
 const getMyProfileFromDB = async (userId: string) => {
-  const result = await prisma.user.findUnique({
+  // Fetch user, the provider link, and customer level counts
+  const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
+      provider: {
+        select: { id: true },
+      },
       _count: {
-        select: { orders: true, reviews: true },
+        select: {
+          orders: true,
+          reviews: true,
+        },
       },
     },
   });
 
-  if (!result) throw new AppError(404, "User profile not found");
-  return result;
+  if (!user) throw new AppError(404, "User profile not found");
+
+  // Default to customer order count
+  let relevantOrderCount = user._count?.orders || 0;
+
+  // If role is PROVIDER, swap to 'Orders Received' count
+  if (user.role === "PROVIDER" && user.provider) {
+    relevantOrderCount = await prisma.order.count({
+      where: { providerId: user.provider.id },
+    });
+  }
+
+  return {
+    ...user,
+    _count: {
+      reviews: user._count?.reviews || 0,
+      orders: relevantOrderCount, // Represents 'Handled' for Providers
+    },
+  };
 };
 
 const updateProfileInDB = async (

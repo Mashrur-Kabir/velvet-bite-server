@@ -10,6 +10,7 @@ model ProviderProfile {
     address     String
     phone       String
     isActive    Boolean @default(true)
+    user        User    @relation(fields: [userId], references: [id])
 
     meals  Meal[]
     orders Order[]

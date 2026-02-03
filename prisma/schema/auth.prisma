@@ -1,18 +1,21 @@
 model User {
-    id            String      @id
+    id            String           @id
     name          String
     email         String
-    emailVerified Boolean     @default(false)
+    emailVerified Boolean          @default(false)
     image         String?
-    createdAt     DateTime    @default(now())
-    updatedAt     DateTime    @updatedAt
+    createdAt     DateTime         @default(now())
+    updatedAt     DateTime         @updatedAt
     role          String?
     phone         String?
-    status        UserStatus? @default(ACTIVE) // Enum type
-    sessions      Session[]
-    accounts      Account[]
-    orders        Order[]
-    reviews       Review[]
+    status        UserStatus?      @default(ACTIVE) // Enum type
+    provider      ProviderProfile?
+
+    sessions          Session[]
+    accounts          Account[]
+    orders            Order[]
+    reviews           Review[]
+    providerProfileId String?
 
     @@unique([email])
     @@map("user")
