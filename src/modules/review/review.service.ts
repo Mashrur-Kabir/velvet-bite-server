@@ -17,14 +17,14 @@ const createReviewInDB = async (
     throw new AppError(400, "Rating must be between 1 and 5");
   }
 
-  // 1. Check meal exists
+  // check meal exists
   const meal = await prisma.meal.findUnique({
     where: { id: mealId },
   });
 
   if (!meal) throw new AppError(404, "Meal not found");
 
-  // 2. Check user ordered this meal and it was DELIVERED
+  // check user ordered this meal and it was DELIVERED
   const hasOrdered = await prisma.orderItem.findFirst({
     where: {
       mealId,
@@ -42,7 +42,7 @@ const createReviewInDB = async (
     );
   }
 
-  // 3. Create review with a unique check
+  // create review with a unique check
   try {
     return await prisma.review.create({
       data: {
@@ -90,7 +90,7 @@ const getReviewsByMealFromDB = async (mealId: string) => {
   });
 };
 
-// New Service for Admin Moderation
+// cew Service for Admin Moderation
 const getAllReviewsFromDB = async () => {
   return prisma.review.findMany({
     orderBy: { createdAt: "desc" },

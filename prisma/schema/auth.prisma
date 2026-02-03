@@ -11,11 +11,10 @@ model User {
     status        UserStatus?      @default(ACTIVE) // Enum type
     provider      ProviderProfile?
 
-    sessions          Session[]
-    accounts          Account[]
-    orders            Order[]
-    reviews           Review[]
-    providerProfileId String?
+    sessions Session[]
+    accounts Account[]
+    orders   Order[]
+    reviews  Review[]
 
     @@unique([email])
     @@map("user")

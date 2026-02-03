@@ -14,7 +14,7 @@ const createOrderInDB = async (
     throw new AppError(400, "Order must contain at least one item");
   }
 
-  // 1. Fetch meals to get prices and provider info
+  // fetch meals to get prices and provider info
   const products = await prisma.meal.findMany({
     where: {
       id: { in: items.map((i) => i.mealId) },
@@ -25,7 +25,7 @@ const createOrderInDB = async (
     throw new AppError(404, "One or more products not found");
   }
 
-  // 2. Map items to schema structure
+  // map items to schema structure
   const orderItems = items.map((item) => {
     const product = products.find((p) => p.id === item.mealId)!;
 
@@ -45,7 +45,7 @@ const createOrderInDB = async (
     0,
   );
 
-  // 3. Get the providerId
+  // get the providerId
   const providerIds = new Set(products.map((p) => p.providerId));
 
   if (providerIds.size !== 1) {
@@ -172,7 +172,7 @@ const getOrderByIdFromDB = async (
 
   if (!order) throw new AppError(404, "Order not found");
 
-  // Check if user has permission to see this specific order
+  // check if user has permission to see this specific order
   const isOwner = order.customerId === userId;
   const isProvider =
     order.providerId ===
@@ -198,7 +198,7 @@ const updateOrderStatusInDB = async (
 
   if (!order) throw new AppError(404, "Order not found");
 
-  // 1. CUSTOMER Logic: Can only CANCEL and only if status is PLACED
+  // CUSTOMER Logic: Can only CANCEL and only if status is PLACED
   if (role === "CUSTOMER") {
     if (newStatus !== "CANCELLED") {
       throw new AppError(403, "Customers can only change status to CANCELLED");
@@ -214,7 +214,7 @@ const updateOrderStatusInDB = async (
     }
   }
 
-  // 2. PROVIDER Logic: Must own the restaurant and cannot CANCEL
+  // PROVIDER Logic: Must own the restaurant and cannot CANCEL
   if (role === "PROVIDER") {
     const providerProfile = await prisma.providerProfile.findUnique({
       where: { userId },
@@ -235,7 +235,7 @@ const updateOrderStatusInDB = async (
     }
   }
 
-  // 3. ADMIN Logic: Full permissions (as per Admin Features) as they oversee the platform
+  // ADMIN Logic: Full permissions (as per Admin Features) as they oversee the platform
 
   return prisma.order.update({
     where: { id: orderId },

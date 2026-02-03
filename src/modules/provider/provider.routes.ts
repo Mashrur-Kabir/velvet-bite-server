@@ -23,5 +23,3 @@ router.get("/", providerController.getAllProviders);
 router.get("/:providerId", providerController.getProviderById);
 
 export const providerRoutes = router;
-
-//all testing done.

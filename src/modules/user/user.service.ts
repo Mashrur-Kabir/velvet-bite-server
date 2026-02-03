@@ -1,7 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../errors/AppError";
 import { UserStatus } from "../../../generated/prisma/enums";
-import { sanitizeUserResponse } from "../../helpers/filterResponse";
 
 const getMyProfileFromDB = async (userId: string) => {
   const user = await prisma.user.findUnique({
@@ -21,7 +20,7 @@ const getMyProfileFromDB = async (userId: string) => {
 
   if (!user) throw new AppError(404, "User profile not found");
 
-  // 🔹 ADMIN: return profile WITHOUT _count
+  //ADMIN: return profile WITHOUT _count
   if (user.role === "ADMIN") {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { _count, ...adminSafeUser } = user;
@@ -51,19 +50,19 @@ const updateProfileInDB = async (
   userId: string,
   payload: Partial<{ name: string; phone: string; image: string }>,
 ) => {
+  // explicitly pick only allowed fields to prevent role/email escalation
   const { name, phone, image } = payload;
 
+  // Build update object
   const updateData: Record<string, any> = {};
   if (name !== undefined) updateData.name = name;
   if (phone !== undefined) updateData.phone = phone;
   if (image !== undefined) updateData.image = image;
 
-  const updatedUser = await prisma.user.update({
+  return await prisma.user.update({
     where: { id: userId },
     data: updateData,
   });
-
-  return sanitizeUserResponse(updatedUser);
 };
 
 const getAllUsersFromDB = async () => {
@@ -78,7 +77,7 @@ const updateUserStatusInDB = async (userId: string, status: UserStatus) => {
 
   return await prisma.user.update({
     where: { id: userId },
-    data: { status }, // TypeScript now enforces only ACTIVE or BLOCKED
+    data: { status },
   });
 };
 

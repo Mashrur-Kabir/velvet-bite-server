@@ -1,277 +1,165 @@
----
-BACKEND
----
+# Velvet Bite — Backend Server
 
-# Velvet Bite
+Velvet Bite is a production-grade backend server powering a multi-role food ordering platform. It is designed with **clean architecture**, **strong domain separation**, and **scalable patterns** suitable for real-world SaaS systems.
 
-Velvet Bite is a role-based food ordering backend built with **Node.js, Express, Prisma, PostgreSQL**, and **Better Auth**.
-It supports customers, providers, and administrators with clear domain separation and scalable module design.
+This repository contains the **API layer**, **business logic**, **authentication**, and **data orchestration** for Customers, Providers (Kitchens), and Admins.
 
 ---
 
-## Tech Stack and Features
+## 🧭 System Overview
 
-- **Runtime:** Node.js + TypeScript
-- **Framework:** Express
-- **Database ORM:** Prisma
-- **Database:** PostgreSQL
-- **Authentication:** Better Auth (email/password)
-- **Authorization:** Role-based access control
-- **Migrations:** Prisma Migrate
-- **Seeding:** Custom admin seed script
-- **Logging:** Structured console logger
+Velvet Bite supports **three core user roles**:
+
+- **Customer** — Browses meals, places orders, leaves reviews
+- **Provider** — Manages kitchen profile, meals, and incoming orders
+- **Admin** — Oversees platform taxonomy, users, and system health
+
+The backend enforces **role-based behavior**, **secure mutations**, and **clean data contracts** across all layers.
 
 ---
 
-Each module follows a **controller → service → route** pattern.
+## 🧱 Architecture
+
+The project follows a **Modular Service-Driven Architecture** for:
+
+- **Feature isolation** — each module owns its routes, service, validation
+- **Scalability** — new domains can be added without touching core logic
+- **Testability** — services are decoupled from HTTP concerns
 
 ---
 
-## Core Concepts
-
-### Roles
-
-The system supports three roles:
-
-| Role       | Description                                        |
-| ---------- | -------------------------------------------------- |
-| `ADMIN`    | System-level access, manages categories and orders |
-| `PROVIDER` | Restaurant owner / seller                          |
-| `CUSTOMER` | End user placing orders                            |
-
-- Users default to `CUSTOMER`
-- Role escalation to `PROVIDER` happens during provider onboarding
-- `ADMIN` cannot be self-assigned and is seeded manually
-
----
-
-## Database Schema Overview
-
-### Key Models
-
-- `User`
-- `ProviderProfile`
-- `Category`
-- `Meal`
-- `Order`
-- `OrderItem`
-- `Review`
-- `Session`, `Account`, `Verification` (Better Auth)
-
-Schemas are split across files inside `prisma/schema/` for maintainability.
-
----
-
-## Authentication & Authorization
-
-- Authentication handled entirely by **Better Auth**
-- Session-based authentication
-- Authorization enforced via `auth()` middleware
-- `req.user` is injected automatically
-
-Example:
+## 🔐 Roles
 
 ```ts
-auth(USER_ROLE.ADMIN);
-auth(USER_ROLE.PROVIDER);
-auth(USER_ROLE.CUSTOMER);
+ADMIN | PROVIDER | CUSTOMER;
 ```
 
 ---
 
-## API Testing Order (Recommended)
+## 🏪 Provider Module (Kitchen)
 
-The APIs should be tested in the following order to respect **data dependencies, role boundaries, and relational integrity**.
+Providers represent independent kitchens.
 
-### 1 Authentication & User Setup
+### Capabilities
 
-**Why first:**
-Every protected route depends on a valid authenticated user with a correct role.
+- Create & manage provider profile
+- Toggle kitchen availability
+- Create & manage meals
+- Handle incoming orders
 
-**Test flow:**
+### Metrics Logic
 
-- Sign up **Customer**
-- Sign up **Provider**
-- Login all users
-- Verify session cookies / tokens are being set correctly
-
-**Notes:**
-
-- Users default to `CUSTOMER`
-- Provider role becomes meaningful only after provider profile creation
-- Admin is seeded separately and should already exist
-
-### 2 Provider Module (Provider Onboarding)
-
-**Why now:**
-Meals and orders depend on `ProviderProfile`.
-
-**Test as:** Provider user
-
-**APIs to test:**
-
-- Create provider profile
-- Get own provider profile
-- Update provider profile
-- Get provider by ID (public)
-- List providers (if enabled)
-
-**Verify:**
-
-- `ProviderProfile` is created
-- Correct `userId` linkage
-- Provider role is effectively usable
-
-### 3 Category Module
-
-**Why now:**
-Meals cannot be created without valid categories.
-
-**Test as:** Admin
-
-**APIs to test:**
-
-- Create category
-- Update category
-- Get all active categories (public)
-
-**Verify:**
-
-- Categories appear in Prisma Studio
-- `isActive` filtering works correctly
-
-### 4 Meal Module
-
-**Why now:**
-Orders depend on meals, and reviews depend on meals.
-
-**Test as:** Provider (create/update), Public (read)
-
-**APIs to test:**
-
-- Create meal
-- Update meal
-- Get meal by ID
-- List meals with pagination
-- Filter meals by:
-  - category
-  - provider
-  - availability
-
-**Verify:**
-
-- Pagination metadata (`page`, `limit`, `total`)
-- Meals correctly linked to provider and category
-- `isAvailable` logic works
-
-### 5 Order Module
-
-**Why now:**
-Orders depend on meals, providers, and customers.
-
-#### Customer Flow
-
-**Test as:** Customer
-
-- Place order (single provider constraint)
-- Get own orders
-
-#### Provider Flow
-
-**Test as:** Provider
-
-- Get incoming orders (by providerId)
-
-#### Admin Flow
-
-**Test as:** Admin
-
-- Update order status
-
-**Verify:**
-
-- Orders are transactional
-- Only one provider per order enforced
-- Order status transitions work
-- Order items reference correct meals
-
-### 6 Review Module
-
-**Why last:**
-Reviews depend on meals and completed customer flows.
-
-**Test as:** Customer
-
-**APIs to test:**
-
-- Create review
-- Get reviews for a meal
-
-**Verify:**
-
-- One review per user per meal constraint
-- Rating and comment persistence
-- Reviews linked correctly to meals
-
-## Final Sanity Checks
-
-Before moving to frontend integration:
-
-- Verify all relations in Prisma Studio
-- Test role-based access denial cases
-- Test invalid payloads and edge cases
-- Confirm pagination consistency
-- Confirm provider isolation (no cross-provider access)
+- Provider order counts reflect **orders received**, not placed
+- Revenue metrics are computed dynamically from order history
 
 ---
 
-## Admin Seeding
+## 🍽️ Meal Module
 
-Admin users are created via script.
+Meals are owned by providers and categorized.
+
+### Features
+
+- Provider-only mutations
+- Availability toggling
+- Aggregated metrics (ratings, reviews)
+
+### Response Enhancements
+
+- `avgRating`
+- `totalReviews`
+- `_count.reviews`
+
+All derived server-side for frontend simplicity.
+
+---
+
+## 📦 Order Module
+
+Orders flow through controlled states:
+
+```ts
+PLACED → PREPARING → READY → DELIVERED
+```
+
+### Safeguards
+
+- Providers can only mutate their own orders
+- Invalid state transitions are blocked
+- Financial totals are immutable post-delivery
+
+---
+
+## 🧾 Review Module
+
+- Customers can review only delivered orders
+- Reviews are linked to meals and providers
+- Ratings are aggregated automatically
+
+---
+
+## 🗂️ Category Module
+
+- Admin-only
+- Central taxonomy used by meals
+- Prevents deletion when in use
+
+---
+
+## 🛡️ Error Handling
+
+Centralized error handling via:
+
+- `AppError` (custom error class)
+- Global error middleware
+
+All errors follow a consistent shape:
+
+```json
+{
+  "success": false,
+  "message": "Readable error message"
+}
+```
+
+---
+
+## 📦 Database Layer
+
+- **Prisma ORM**
+- Strong relational modeling
+- Explicit selects to avoid over-fetching
+
+### Principles
+
+- No `any`
+- No implicit relations
+- Defensive querying
+
+---
+
+## 🌱 Environment Variables
+
+```
+PORT=5000
+DATABASE_URL=postgresql://...
+JWT_SECRET=your_secret
+JWT_EXPIRES_IN=7d
+```
+
+---
+
+## 🚀 Running Locally
 
 ```bash
-npm run seed:admin
+npm install
+npm run dev
 ```
 
-The script:
-
-- Registers admin via Better Auth
-- Forces role = `ADMIN`
-- Marks email as verified
-- Prevents duplicate creation
-
-Required env variables:
+Server runs at:
 
 ```
-ADMIN_NAME
-ADMIN_EMAIL
-ADMIN_PASSWORD
-BETTER_AUTH_URL
-SERVER_URL
+http://localhost:5000
 ```
-
----
-
-## Environment Variables
-
-- Check .env.example
-
----
-
-## Error Handling
-
-- Centralized `AppError` class
-- Consistent HTTP error responses
-- Async safety via `catchAsync`
-
----
-
-## Design Principles
-
-- Clear separation of concerns
-- Transaction-safe writes
-- Role-first authorization
-- Database-driven truth
-- Scalable module boundaries
 
 ---
