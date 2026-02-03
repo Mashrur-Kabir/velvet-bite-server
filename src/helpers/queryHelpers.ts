@@ -1,4 +1,3 @@
-// src/utils/paginationHelper.ts
 // Logic specific to API's flow
 
 //1. Pagination and Sorting Helpers that will be commonly used across tables

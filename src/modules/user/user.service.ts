@@ -1,9 +1,9 @@
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../errors/AppError";
 import { UserStatus } from "../../../generated/prisma/enums";
+import { sanitizeUserResponse } from "../../helpers/filterResponse";
 
 const getMyProfileFromDB = async (userId: string) => {
-  // Fetch user, the provider link, and customer level counts
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
@@ -21,10 +21,17 @@ const getMyProfileFromDB = async (userId: string) => {
 
   if (!user) throw new AppError(404, "User profile not found");
 
+  // 🔹 ADMIN: return profile WITHOUT _count
+  if (user.role === "ADMIN") {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { _count, ...adminSafeUser } = user;
+    return adminSafeUser;
+  }
+
   // Default to customer order count
   let relevantOrderCount = user._count?.orders || 0;
 
-  // If role is PROVIDER, swap to 'Orders Received' count
+  // PROVIDER: count received orders instead
   if (user.role === "PROVIDER" && user.provider) {
     relevantOrderCount = await prisma.order.count({
       where: { providerId: user.provider.id },
@@ -35,7 +42,7 @@ const getMyProfileFromDB = async (userId: string) => {
     ...user,
     _count: {
       reviews: user._count?.reviews || 0,
-      orders: relevantOrderCount, // Represents 'Handled' for Providers
+      orders: relevantOrderCount,
     },
   };
 };
@@ -44,19 +51,19 @@ const updateProfileInDB = async (
   userId: string,
   payload: Partial<{ name: string; phone: string; image: string }>,
 ) => {
-  // Explicitly pick only allowed fields to prevent role/email escalation
   const { name, phone, image } = payload;
 
-  // Build update object
   const updateData: Record<string, any> = {};
   if (name !== undefined) updateData.name = name;
   if (phone !== undefined) updateData.phone = phone;
   if (image !== undefined) updateData.image = image;
 
-  return await prisma.user.update({
+  const updatedUser = await prisma.user.update({
     where: { id: userId },
-    data: updateData, // Only the whitelisted fields are passed here
+    data: updateData,
   });
+
+  return sanitizeUserResponse(updatedUser);
 };
 
 const getAllUsersFromDB = async () => {
