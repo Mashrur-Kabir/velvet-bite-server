@@ -1,6 +1,6 @@
 import { fromNodeHeaders } from "better-auth/node";
 import { NextFunction, Request, Response } from "express";
-import { auth as betterAuth } from "../lib/better-auth";
+import { auth as betterAuth } from "../lib/auth";
 import { AppError } from "../errors/AppError";
 import { catchAsync } from "../utils/catchAsync";
 import { Role, Status } from "../types/user";

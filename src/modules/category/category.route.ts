@@ -1,5 +1,5 @@
 import { Router } from "express";
-import auth from "../../middlewares/auth";
+import auth from "../../middlewares/authMiddleware";
 import { categoryController } from "./category.controller";
 import { USER_ROLE } from "../../types/user";
 

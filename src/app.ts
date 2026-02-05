@@ -1,7 +1,7 @@
 import express, { Application } from "express";
 import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
-import { auth } from "./lib/better-auth";
+import { auth } from "./lib/auth";
 import { reviewRoutes } from "./modules/review/review.route";
 import { mealRoutes } from "./modules/meal/meal.route";
 import { categoryRoutes } from "./modules/category/category.route";
