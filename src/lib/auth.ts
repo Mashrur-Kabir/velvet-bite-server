@@ -49,9 +49,11 @@ export const auth = betterAuth({
 
   advanced: {
     cookie: {
-      sameSite: "none", // Required for cross-site cookie transmission
+      domain: ".vercel.app", // <<--- allow cookies for all *.vercel.app
+      sameSite: "none", // must be none for cross-site
     },
-    useSecureCookies: true, // Always true for https vercel deployments
+    useSecureCookies: true, // Vercel uses HTTPS
+    cookiePrefix: "better-auth",
   },
 
   user: {
