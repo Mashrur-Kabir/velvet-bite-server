@@ -49,10 +49,9 @@ export const auth = betterAuth({
 
   advanced: {
     cookie: {
-      domain: ".vercel.app", // This allows sharing across all *.vercel.app subdomains
+      sameSite: "none", // Required for cross-site cookie transmission
     },
-    // Required for secure cookie transmission in production
-    useSecureCookies: process.env.NODE_ENV === "production",
+    useSecureCookies: true, // Always true for https vercel deployments
   },
 
   user: {
